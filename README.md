@@ -1,2 +1,2 @@
 # OptimismVault
-frontend
+front-end HTML+JS
