@@ -1,0 +1,33 @@
+async function depositERC20() {
+  const tokenAddress = document.getElementById('erc20TokenAddressDeposit').value;
+  const amount = document.getElementById('erc20AmountDeposit').value;
+
+  if (!tokenAddress || !amount) return alert("Укажите адрес токена и сумму");
+
+  const token = new web3.eth.Contract([
+    { "constant": false, "inputs": [ { "name": "spender", "type": "address" }, { "name": "value", "type": "uint256" } ], "name": "approve", "outputs": [ { "name": "", "type": "bool" } ], "type": "function" }
+  ], tokenAddress);
+
+  // Сначала — апрув
+  await token.methods.approve(contractAddress, amount).send({ from: userAccount });
+
+  // Потом — вызов depositERC20
+  await contract.methods.depositERC20(tokenAddress, amount).send({ from: userAccount });
+
+  alert("Токены отправлены в хранилище");
+}
+
+async function withdrawERC20() {
+  const tokenAddress = document.getElementById('erc20TokenAddressWithdraw').value;
+  const to = document.getElementById('erc20Recipient').value;
+  const amount = document.getElementById('erc20AmountWithdraw').value;
+
+  if (!tokenAddress || !to || !amount) return alert("Заполните все поля");
+
+  try {
+    await contract.methods.withdrawERC20(tokenAddress, to, amount).send({ from: userAccount });
+    alert("Токены выведены");
+  } catch (err) {
+    alert("Ошибка: " + err.message);
+  }
+}
