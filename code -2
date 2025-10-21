@@ -1,0 +1,14 @@
+  <div class="section">
+    <h3>💰 Депозит ERC-20</h3>
+    <input id="erc20TokenAddressDeposit" placeholder="Адрес токена" />
+    <input id="erc20AmountDeposit" placeholder="Сумма (в единицах токена)" />
+    <button onclick="depositERC20()">Депозит токена</button>
+  </div>
+
+  <div class="section">
+    <h3>📤 Вывод ERC-20 (только владелец)</h3>
+    <input id="erc20TokenAddressWithdraw" placeholder="Адрес токена" />
+    <input id="erc20Recipient" placeholder="Адрес получателя" />
+    <input id="erc20AmountWithdraw" placeholder="Сумма (в единицах токена)" />
+    <button onclick="withdrawERC20()">Вывод токена</button>
+  </div>
