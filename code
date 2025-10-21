@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Optimism Vault Interface</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    button { margin: 5px; padding: 10px 20px; }
+    input { margin: 5px 0; width: 100%; padding: 8px; }
+    .section { margin-bottom: 30px; }
+  </style>
+</head>
+<body>
+
+  <h1>Optimism Vault Interface</h1>
+
+  <div class="section">
+    <button onclick="connectWallet()">🔌 Подключить MetaMask</button>
+    <p>Ваш адрес: <span id="userAddress">—</span></p>
+  </div>
+
+  <div class="section">
+    <p><strong>Адрес контракта:</strong> <span id="contractAddress">—</span></p>
+    <p><strong>Владелец:</strong> <span id="ownerAddress">—</span></p>
+    <p><strong>Баланс контракта:</strong> <span id="vaultBalance">—</span> ETH</p>
+    <button onclick="getBalance()">🔄 Обновить баланс</button>
+  </div>
+
+  <div class="section">
+    <h3>📤 Отправить ETH в контракт</h3>
+    <input id="depositAmount" placeholder="Сумма в ETH" />
+    <button onclick="deposit()">Депозит</button>
+  </div>
+
+  <div class="section">
+    <h3>📥 Вывод (только владелец)</h3>
+    <input id="withdrawTo" placeholder="Куда перевести ETH (адрес)" />
+    <input id="withdrawAmount" placeholder="Сумма в ETH" />
+    <button onclick="withdraw()">Вывод</button>
+  </div>
+
+  <script>
+    const contractABI = [
+      { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "sender", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "Deposit", "type": "event" },
+      { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "Withdrawal", "type": "event" },
+      { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address payable", "name": "_to", "type": "address" }, { "internalType": "uint256", "name": "_amount", "type": "uint256" } ], "name": "withdraw", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "getBalance", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
+    ];
+
+    // ⬇️ Укажи здесь адрес своего задеплоенного контракта на Optimism
+    const contractAddress = "0x1234567890abcdef1234567890abcdef12345678";  // замените на свой адрес
+
+    let web3;
+    let contract;
+    let userAccount;
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await window.ethereum.enable();
+        const accounts = await web3.eth.getAccounts();
+        userAccount = accounts[0];
+        document.getElementById('userAddress').innerText = userAccount;
+        contract = new web3.eth.Contract(contractABI, contractAddress);
+        document.getElementById('contractAddress').innerText = contractAddress;
+        getOwner();
+        getBalance();
+      } else {
+        alert("Установите MetaMask!");
+      }
+    }
+
+    async function getOwner() {
+      const owner = await contract.methods.owner().call();
+      document.getElementById('ownerAddress').innerText = owner;
+    }
+
+    async function getBalance() {
+      const balance = await contract.methods.getBalance().call();
+      document.getElementById('vaultBalance').innerText = web3.utils.fromWei(balance, 'ether');
+    }
+async function deposit() {
+      const amount = document.getElementById('depositAmount').value;
+      if (!amount) return alert("Введите сумму");
+      await web3.eth.sendTransaction({
+        from: userAccount,
+        to: contractAddress,
+        value: web3.utils.toWei(amount, 'ether')
+      });
+      getBalance();
+    }
+
+    async function withdraw() {
+      const to = document.getElementById('withdrawTo').value;
+      const amount = document.getElementById('withdrawAmount').value;
+      if (!to || !amount) return alert("Заполните оба поля");
+      try {
+        await contract.methods.withdraw(to, web3.utils.toWei(amount, 'ether')).send({ from: userAccount });
+        getBalance();
+      } catch (err) {
+        alert("Ошибка при выводе: " + err.message);
+      }
+    }
+  </script>
+
+</body>
+</html>
